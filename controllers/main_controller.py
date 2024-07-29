@@ -6,10 +6,8 @@ import sys
 class MainController:
     def __init__(self):
         self.app = QtWidgets.QApplication(sys.argv)
-        self.MainWindow = QtWidgets.QMainWindow()
-        ui = MainView()
-        ui.setupUi(self.MainWindow)
+        self.view = MainView()
 
     def show(self):
-        self.MainWindow.show()
+        self.view.show()
         sys.exit(self.app.exec())

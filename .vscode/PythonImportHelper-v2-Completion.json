@@ -16,14 +16,6 @@
         "documentation": {}
     },
     {
-        "label": "QtGui",
-        "importPath": "PyQt6",
-        "description": "PyQt6",
-        "isExtraImport": true,
-        "detail": "PyQt6",
-        "documentation": {}
-    },
-    {
         "label": "QtWidgets",
         "importPath": "PyQt6",
         "description": "PyQt6",
@@ -61,7 +53,7 @@
         "kind": 6,
         "importPath": "controllers.main_controller",
         "description": "controllers.main_controller",
-        "peekOfCode": "class MainController:\n    def __init__(self):\n        self.app = QtWidgets.QApplication(sys.argv)\n        self.MainWindow = QtWidgets.QMainWindow()\n        ui = MainView()\n        ui.setupUi(self.MainWindow)\n    def show(self):\n        self.MainWindow.show()\n        sys.exit(self.app.exec())",
+        "peekOfCode": "class MainController:\n    def __init__(self):\n        self.app = QtWidgets.QApplication(sys.argv)\n        self.view = MainView()\n    def show(self):\n        self.view.show()\n        sys.exit(self.app.exec())",
         "detail": "controllers.main_controller",
         "documentation": {}
     },
@@ -70,7 +62,7 @@
         "kind": 6,
         "importPath": "views.main_view",
         "description": "views.main_view",
-        "peekOfCode": "class MainView(object):\n    def setupUi(self, MainWindow):\n        MainWindow.setObjectName(\"MainWindow\")\n        MainWindow.resize(585, 502)\n        self.centralwidget = QtWidgets.QWidget(parent=MainWindow)\n        self.centralwidget.setObjectName(\"centralwidget\")\n        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)\n        self.horizontalLayout.setObjectName(\"horizontalLayout\")\n        self.gridLayout = QtWidgets.QGridLayout()\n        self.gridLayout.setObjectName(\"gridLayout\")",
+        "peekOfCode": "class MainView(QtWidgets.QMainWindow):\n    def __init__(self):\n        super().__init__()\n        self.setupUi()\n    def setupUi(self):\n        self.setObjectName(\"MainWindow\")\n        self.resize(585, 502)\n        self.centralwidget = QtWidgets.QWidget(self)\n        self.centralwidget.setObjectName(\"centralwidget\")\n        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)",
         "detail": "views.main_view",
         "documentation": {}
     }
