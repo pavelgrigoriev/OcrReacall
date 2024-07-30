@@ -46,7 +46,7 @@ class OcrModel():
         # print(f"Screenshot saved as {filename}")
         return filename
 
-    def process_image(self, image_path):
+    def process_image(self, image_path, result_queue):
         """Обрабатываем изображение с помощью OCR и помещаем результат в очередь."""
         result = self.reader.readtext(image_path, detail=0)
         result_queue.put(result)
