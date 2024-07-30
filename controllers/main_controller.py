@@ -9,6 +9,7 @@ class MainController():
         self.ocr_controller = OcrController(
             config_manager, self.db_controller)
         self.view = MainView()
+        self.setup_connections()
 
     def setup_connections(self):
         self.view.pushButton.clicked.connect(self.search_ocr_results)
@@ -18,7 +19,8 @@ class MainController():
         results = self.db_controller.search_exact_match(search_term)
         for result in results:
             print(
-                f"Путь к изображению: {result[0]}, OCR результат: {result[1]}, Время: {result[2]}")
+                # f"Путь к изображению: {result[0]}, OCR результат: {result[1]}, Время: {result[2]}")
+                f"Путь к изображению: {result[0]}")
 
     def run(self):
         self.view.show()

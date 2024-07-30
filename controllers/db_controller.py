@@ -9,4 +9,5 @@ class DbController:
         self.db_model.save_to_db(image_path, ocr_result)
 
     def search_exact_match(self, terms):
-        self.db_model.search_exact_match(terms)
+        results = self.db_model.search_exact_match(terms)
+        return results

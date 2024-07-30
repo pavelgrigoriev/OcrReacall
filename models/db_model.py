@@ -59,8 +59,16 @@ class DbModel():
                 ''', like_terms)
 
                 results = cursor.fetchall()
-                logging.info("Search results for terms %s: %s", terms, results)
+                logging.info("Search results for terms %s:",
+                             terms)
+
+                for result in results:
+                    # Логируем путь к изображению и первые 10 символов результата
+                    logging.info("Search result - Image Path: %s, OCR Result (first 10 chars): %s",
+                                 result[0], result[1][:10])
+
                 return results
+
         except Exception as e:
             logging.exception("Failed to search database: %s", e)
             return []
