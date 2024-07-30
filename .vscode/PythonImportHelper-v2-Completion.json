@@ -1,5 +1,13 @@
 [
     {
+        "label": "DbModel",
+        "importPath": "models.db_model",
+        "description": "models.db_model",
+        "isExtraImport": true,
+        "detail": "models.db_model",
+        "documentation": {}
+    },
+    {
         "label": "QtWidgets",
         "importPath": "PyQt6",
         "description": "PyQt6",
@@ -9,6 +17,30 @@
     },
     {
         "label": "QtCore",
+        "importPath": "PyQt6",
+        "description": "PyQt6",
+        "isExtraImport": true,
+        "detail": "PyQt6",
+        "documentation": {}
+    },
+    {
+        "label": "QtWidgets",
+        "importPath": "PyQt6",
+        "description": "PyQt6",
+        "isExtraImport": true,
+        "detail": "PyQt6",
+        "documentation": {}
+    },
+    {
+        "label": "QtCore",
+        "importPath": "PyQt6",
+        "description": "PyQt6",
+        "isExtraImport": true,
+        "detail": "PyQt6",
+        "documentation": {}
+    },
+    {
+        "label": "QtGui",
         "importPath": "PyQt6",
         "description": "PyQt6",
         "isExtraImport": true,
@@ -41,11 +73,90 @@
         "documentation": {}
     },
     {
+        "label": "OcrModel",
+        "importPath": "models.ocr_model",
+        "description": "models.ocr_model",
+        "isExtraImport": true,
+        "detail": "models.ocr_model",
+        "documentation": {}
+    },
+    {
+        "label": "sqlite3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sqlite3",
+        "description": "sqlite3",
+        "detail": "sqlite3",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "pyscreenshot",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pyscreenshot",
+        "description": "pyscreenshot",
+        "detail": "pyscreenshot",
+        "documentation": {}
+    },
+    {
+        "label": "easyocr",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "easyocr",
+        "description": "easyocr",
+        "detail": "easyocr",
+        "documentation": {}
+    },
+    {
+        "label": "warnings",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "warnings",
+        "description": "warnings",
+        "detail": "warnings",
+        "documentation": {}
+    },
+    {
         "label": "MainController",
         "importPath": "controllers.main_controller",
         "description": "controllers.main_controller",
         "isExtraImport": true,
         "detail": "controllers.main_controller",
+        "documentation": {}
+    },
+    {
+        "label": "DbController",
+        "kind": 6,
+        "importPath": "controllers.db_controller",
+        "description": "controllers.db_controller",
+        "peekOfCode": "class DbController:\n    def __init__(self):\n        self.db_model = DbModel()\n    def save_to_db(self, image_path, ocr_result):\n        self.db_model.save_to_db(image_path, ocr_result)\n    def search_exact_match(self, terms):\n        self.db_model.search_exact_match(terms)",
+        "detail": "controllers.db_controller",
         "documentation": {}
     },
     {
@@ -58,12 +169,48 @@
         "documentation": {}
     },
     {
+        "label": "OcrController",
+        "kind": 6,
+        "importPath": "controllers.ocr_controller",
+        "description": "controllers.ocr_controller",
+        "peekOfCode": "class OcrController:\n    def __init__(self, db_controller):\n        self.ocr_model = OcrModel\n        self.db_controller = db_controller",
+        "detail": "controllers.ocr_controller",
+        "documentation": {}
+    },
+    {
+        "label": "DbModel",
+        "kind": 6,
+        "importPath": "models.db_model",
+        "description": "models.db_model",
+        "peekOfCode": "class DbModel():\n    def __init__(self, db_path='ocr_results.db'):\n        self.db_path = db_path\n        self.init_db()\n    def init_db(self):\n        \"\"\"Создаем FTS5 таблицу для хранения результатов с полнотекстовым поиском.\"\"\"\n        with sqlite3.connect(self.db_path) as conn:\n            cursor = conn.cursor()\n            cursor.execute('''\n            CREATE VIRTUAL TABLE IF NOT EXISTS ocr_results_fts",
+        "detail": "models.db_model",
+        "documentation": {}
+    },
+    {
+        "label": "OcrModel",
+        "kind": 6,
+        "importPath": "models.ocr_model",
+        "description": "models.ocr_model",
+        "peekOfCode": "class OcrModel():\n    def __init__(self, image_folder='images'):\n        self.image_folder = image_folder\n        # Создаем папку для изображений, если она не существует\n        os.makedirs(self.image_folder, exist_ok=True)\n        # Инициализация модели OCR\n        self.reader = easyocr.Reader(['ru', 'en'], gpu=True)\n    def take_screenshot(self):\n        \"\"\"Захватываем полный экран.\"\"\"\n        return ImageGrab.grab()",
+        "detail": "models.ocr_model",
+        "documentation": {}
+    },
+    {
         "label": "MainView",
         "kind": 6,
         "importPath": "views.main_view",
         "description": "views.main_view",
         "peekOfCode": "class MainView(QtWidgets.QMainWindow):\n    def __init__(self):\n        super().__init__()\n        self.setupUi()\n    def setupUi(self):\n        self.setObjectName(\"MainWindow\")\n        self.resize(585, 502)\n        self.centralwidget = QtWidgets.QWidget(self)\n        self.centralwidget.setObjectName(\"centralwidget\")\n        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)",
         "detail": "views.main_view",
+        "documentation": {}
+    },
+    {
+        "label": "Ui_Dialog",
+        "kind": 6,
+        "importPath": "views.settings_view",
+        "description": "views.settings_view",
+        "peekOfCode": "class Ui_Dialog(object):\n    def setupUi(self, Dialog):\n        Dialog.setObjectName(\"Dialog\")\n        Dialog.resize(400, 308)\n        self.buttonBox = QtWidgets.QDialogButtonBox(parent=Dialog)\n        self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))\n        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)\n        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)\n        self.buttonBox.setObjectName(\"buttonBox\")\n        self.retranslateUi(Dialog)",
+        "detail": "views.settings_view",
         "documentation": {}
     }
 ]

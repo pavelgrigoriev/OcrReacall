@@ -73,7 +73,7 @@ class MainView(QtWidgets.QMainWindow):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.setWindowTitle(_translate("MainWindow", "OcrRecall"))
         self.pushButton.setText(_translate("MainWindow", "Поиск"))
         self.menu.setTitle(_translate("MainWindow", "Настройки"))
         self.menu_3.setTitle(_translate("MainWindow", "О программе"))
