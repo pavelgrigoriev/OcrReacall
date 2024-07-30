@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread
 import time
 from multiprocessing import Queue, Process, set_start_method
 
@@ -6,8 +6,6 @@ set_start_method('spawn', force=True)
 
 
 class OcrWorker(QThread):
-    update_signal = pyqtSignal(str)
-
     def __init__(self, ocr_model, db_controller):
         super().__init__()
         self.ocr_model = ocr_model
@@ -31,5 +29,4 @@ class OcrWorker(QThread):
                 result = result_queue.get()
                 self.db_controller.save_to_db(
                     current_screenshot_path, str(result))
-                self.update_signal.emit(
-                    f"Processed screenshot: {current_screenshot_path}")
+                print(f"Processed screenshot: {current_screenshot_path}")

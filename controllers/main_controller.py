@@ -1,7 +1,6 @@
 from views.main_view import MainView
 from controllers.db_controller import DbController
 from controllers.ocr_controller import OcrController
-from workers.ocr_worker import OcrWorker
 
 
 class MainController():
@@ -10,7 +9,6 @@ class MainController():
         self.ocr_controller = OcrController(
             config_manager, self.db_controller)
         self.view = MainView()
-        self.worker_thread = OcrWorker(self.ocr_controller, self.db_controller)
 
     def setup_connections(self):
         self.view.pushButton.clicked.connect(self.search_ocr_results)

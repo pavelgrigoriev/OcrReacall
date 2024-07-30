@@ -7,10 +7,6 @@ class OcrController:
         self.ocr_model = OcrModel(settings_manager.get_app_dir())
         self.db_controller = db_controller
         self.ocr_worker = OcrWorker(self.ocr_model, self.db_controller)
-        self.ocr_worker.update_signal.connect(self.handle_update_signal)
-
-    def handle_update_signal(self, message):
-        print(message)
 
     def start_screenshot_loop(self):
         self.ocr_worker.start()

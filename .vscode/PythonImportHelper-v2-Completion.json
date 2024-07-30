@@ -50,27 +50,19 @@
         "documentation": {}
     },
     {
-        "label": "OcrWorker",
-        "importPath": "workers.ocr_worker",
-        "description": "workers.ocr_worker",
-        "isExtraImport": true,
-        "detail": "workers.ocr_worker",
-        "documentation": {}
-    },
-    {
-        "label": "OcrWorker",
-        "importPath": "workers.ocr_worker",
-        "description": "workers.ocr_worker",
-        "isExtraImport": true,
-        "detail": "workers.ocr_worker",
-        "documentation": {}
-    },
-    {
         "label": "OcrModel",
         "importPath": "models.ocr_model",
         "description": "models.ocr_model",
         "isExtraImport": true,
         "detail": "models.ocr_model",
+        "documentation": {}
+    },
+    {
+        "label": "OcrWorker",
+        "importPath": "workers.ocr_worker",
+        "description": "workers.ocr_worker",
+        "isExtraImport": true,
+        "detail": "workers.ocr_worker",
         "documentation": {}
     },
     {
@@ -183,14 +175,6 @@
         "documentation": {}
     },
     {
-        "label": "pyqtSignal",
-        "importPath": "PyQt6.QtCore",
-        "description": "PyQt6.QtCore",
-        "isExtraImport": true,
-        "detail": "PyQt6.QtCore",
-        "documentation": {}
-    },
-    {
         "label": "time",
         "kind": 6,
         "isExtraImport": true,
@@ -271,7 +255,7 @@
         "kind": 6,
         "importPath": "controllers.main_controller",
         "description": "controllers.main_controller",
-        "peekOfCode": "class MainController():\n    def __init__(self, config_manager):\n        self.db_controller = DbController(config_manager)\n        self.ocr_controller = OcrController(\n            config_manager, self.db_controller)\n        self.view = MainView()\n        self.worker_thread = OcrWorker(self.ocr_controller, self.db_controller)\n    def setup_connections(self):\n        self.view.pushButton.clicked.connect(self.search_ocr_results)\n    def search_ocr_results(self):",
+        "peekOfCode": "class MainController():\n    def __init__(self, config_manager):\n        self.db_controller = DbController(config_manager)\n        self.ocr_controller = OcrController(\n            config_manager, self.db_controller)\n        self.view = MainView()\n    def setup_connections(self):\n        self.view.pushButton.clicked.connect(self.search_ocr_results)\n    def search_ocr_results(self):\n        search_term = self.view.lineEdit.text()",
         "detail": "controllers.main_controller",
         "documentation": {}
     },
@@ -280,7 +264,7 @@
         "kind": 6,
         "importPath": "controllers.ocr_controller",
         "description": "controllers.ocr_controller",
-        "peekOfCode": "class OcrController:\n    def __init__(self, settings_manager, db_controller):\n        self.ocr_model = OcrModel(settings_manager.get_app_dir())\n        self.db_controller = db_controller\n        self.ocr_worker = OcrWorker(self.ocr_model, self.db_controller)\n        self.ocr_worker.update_signal.connect(self.handle_update_signal)\n    def handle_update_signal(self, message):\n        print(message)\n    def start_screenshot_loop(self):\n        self.ocr_worker.start()",
+        "peekOfCode": "class OcrController:\n    def __init__(self, settings_manager, db_controller):\n        self.ocr_model = OcrModel(settings_manager.get_app_dir())\n        self.db_controller = db_controller\n        self.ocr_worker = OcrWorker(self.ocr_model, self.db_controller)\n    def start_screenshot_loop(self):\n        self.ocr_worker.start()",
         "detail": "controllers.ocr_controller",
         "documentation": {}
     },
@@ -325,7 +309,7 @@
         "kind": 6,
         "importPath": "workers.ocr_worker",
         "description": "workers.ocr_worker",
-        "peekOfCode": "class OcrWorker(QThread):\n    update_signal = pyqtSignal(str)\n    def __init__(self, ocr_model, db_controller):\n        super().__init__()\n        self.ocr_model = ocr_model\n        self.db_controller = db_controller\n        self.last_screenshot = None\n    def run(self):\n        self.last_screenshot = self.ocr_model.take_screenshot()\n        while True:",
+        "peekOfCode": "class OcrWorker(QThread):\n    def __init__(self, ocr_model, db_controller):\n        super().__init__()\n        self.ocr_model = ocr_model\n        self.db_controller = db_controller\n        self.last_screenshot = None\n    def run(self):\n        self.last_screenshot = self.ocr_model.take_screenshot()\n        while True:\n            time.sleep(5)",
         "detail": "workers.ocr_worker",
         "documentation": {}
     },
