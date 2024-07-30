@@ -1,3 +1,4 @@
+import logging
 import os
 
 import numpy as np
@@ -6,7 +7,12 @@ import pyscreenshot as ImageGrab
 import easyocr
 import warnings
 
+from logger import setup_logging
+
 warnings.filterwarnings("ignore", category=FutureWarning)
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+
+setup_logging()
 
 
 class OcrModel():
@@ -15,7 +21,11 @@ class OcrModel():
         # Создаем папку для изображений, если она не существует
         os.makedirs(self.image_folder, exist_ok=True)
         # Инициализация модели OCR
-        self.reader = easyocr.Reader(['ru', 'en'], gpu=True)
+        try:
+            self.reader = easyocr.Reader(['ru', 'en'], gpu=True)
+            logging.info("Initialized OcrModel")
+        except Exception as e:
+            logging.exception("Failed to initialize OcrModel: %s", e)
 
     def take_screenshot(self):
         """Захватываем полный экран."""
@@ -30,10 +40,6 @@ class OcrModel():
         diff_mean = np.mean(diff)
         diff_max = np.max(diff)
         diff_normalized = diff_mean / diff_max
-
-        # print(
-        #     f"Mean difference: {diff_mean}, Normalized difference: {diff_normalized}")
-
         return diff_normalized > threshold
 
     def save_screenshot(self, image):
@@ -43,10 +49,9 @@ class OcrModel():
         filename = os.path.join(
             self.image_folder, f"fullscreen_{timestamp}.png")
         image.save(filename)
-        # print(f"Screenshot saved as {filename}")
         return filename
 
-    def process_image(self, image_path, result_queue):
-        """Обрабатываем изображение с помощью OCR и помещаем результат в очередь."""
+    def process_image(self, image_path):
+        """Обрабатываем изображение с помощью OCR и возвращаем результат."""
         result = self.reader.readtext(image_path, detail=0)
-        result_queue.put(result)
+        return result
