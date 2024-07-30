@@ -1,9 +1,10 @@
+import os
 import sqlite3
 
 
 class DbModel():
-    def __init__(self, db_path='ocr_results.db'):
-        self.db_path = db_path
+    def __init__(self, db_path):
+        self.db_path = db_path + "/ocr_results.db"
         self.init_db()
 
     def init_db(self):

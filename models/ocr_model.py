@@ -10,8 +10,8 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 class OcrModel():
-    def __init__(self, image_folder='images'):
-        self.image_folder = image_folder
+    def __init__(self, image_folder):
+        self.image_folder = image_folder + "/images"
         # Создаем папку для изображений, если она не существует
         os.makedirs(self.image_folder, exist_ok=True)
         # Инициализация модели OCR
@@ -46,7 +46,7 @@ class OcrModel():
         # print(f"Screenshot saved as {filename}")
         return filename
 
-    def process_image(self, image_path, result_queue):
+    def process_image(self, image_path):
         """Обрабатываем изображение с помощью OCR и помещаем результат в очередь."""
         result = self.reader.readtext(image_path, detail=0)
         result_queue.put(result)
