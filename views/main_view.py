@@ -1,7 +1,7 @@
 import logging
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from logger import setup_logging
 
 setup_logging()
@@ -41,6 +41,13 @@ class MainView(QtWidgets.QMainWindow):
         # Image cache to store scaled pixmaps
         self.image_cache = {}
 
+        self.load_stylesheet()
+
+    def load_stylesheet(self):
+        # Load the stylesheet from an external file
+        with open("views/styles/styles.css", "r") as file:
+            self.setStyleSheet(file.read())
+
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         logging.info("Application is closing")
         event.accept()
@@ -54,11 +61,12 @@ class MainView(QtWidgets.QMainWindow):
 
     def display_images(self, results):
         self.clear_layout(self.image_grid_layout)  # Clear existing images
-        self.image_paths = [result[0] for result in results]
+        self.image_paths = [(result[0], result[2])
+                            for result in results]  # Store path and caption
 
         # Asynchronously load images
         self.thread = QtCore.QThread()
-        self.image_loader = ImageLoader(self.image_paths)
+        self.image_loader = ImageLoader([path for path, _ in self.image_paths])
         self.image_loader.moveToThread(self.thread)
         self.image_loader.image_loaded.connect(self.on_image_loaded)
         self.thread.started.connect(self.image_loader.load_images)
@@ -86,16 +94,36 @@ class MainView(QtWidgets.QMainWindow):
 
         row = 0
         col = 0
-        for image_path in self.image_paths:
+        for image_path, caption in self.image_paths:
             if image_path in self.image_cache:
                 pixmap = self.image_cache[image_path]
-                label = QLabel()
                 image_size = min(scroll_area_size.width() //
                                  max_columns - 10, min_image_size)
+
+                # Create container widget
+                container = QWidget()
+                container_layout = QVBoxLayout()
+                container.setLayout(container_layout)
+                container.setObjectName("container")
+
+                # Create and set image label
+                image_label = QLabel()
                 scaled_pixmap = pixmap.scaled(
                     image_size, image_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
-                label.setPixmap(scaled_pixmap)
-                self.image_grid_layout.addWidget(label, row, col)
+                image_label.setPixmap(scaled_pixmap)
+
+                # Create and set caption label
+                caption_label = QLabel(caption)
+                caption_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                caption_label.setObjectName("caption")
+
+                # Add image and caption to the container layout
+                container_layout.addWidget(image_label)
+                container_layout.addWidget(caption_label)
+
+                # Add container to the grid layout
+                self.image_grid_layout.addWidget(container, row, col)
+
                 col += 1
                 if col >= max_columns:
                     col = 0
