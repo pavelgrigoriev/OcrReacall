@@ -15,9 +15,7 @@ class MainController():
         if not search_term.strip():
             return
         results = self.db_controller.search_like(search_term)
-        image_paths = [result[0] for result in results]
-        self.view.image_paths = image_paths
-        self.view.display_images(image_paths)
+        self.view.display_images(results)
 
     def run(self):
         self.view.show()
