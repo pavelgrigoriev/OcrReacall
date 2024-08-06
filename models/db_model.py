@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 from logger import setup_logging
+import pytz
 
 setup_logging()
 
@@ -11,16 +12,16 @@ class DbModel():
         self.init_db()
 
     def init_db(self):
-        """Создаем FTS5 таблицу для хранения результатов с полнотекстовым поиском."""
+        """Создаем таблицу для хранения результатов."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                CREATE VIRTUAL TABLE IF NOT EXISTS ocr_results_fts
-                USING fts5(
-                    image_path,
-                    ocr_result,
-                    timestamp UNINDEXED
+                CREATE TABLE IF NOT EXISTS ocr_results (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    image_path TEXT,
+                    ocr_result TEXT,
+                    timestamp TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 ''')
                 conn.commit()
@@ -30,13 +31,13 @@ class DbModel():
             raise
 
     def save_to_db(self, image_path, ocr_result):
-        """Сохраняем результаты инференса в FTS5 таблицу."""
+        """Сохраняем результаты инференса в таблицу."""
         try:
             ocr_result = ocr_result.lower()  # Преобразуем текст в нижний регистр
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT INTO ocr_results_fts (image_path, ocr_result, timestamp)
+                    INSERT INTO ocr_results (image_path, ocr_result, timestamp)
                     VALUES (?, ?, CURRENT_TIMESTAMP)
                 ''', (image_path, ocr_result))
                 conn.commit()
@@ -44,31 +45,27 @@ class DbModel():
         except Exception as e:
             logging.exception("Failed to save OCR result to database: %s", e)
 
-    def search_exact_match(self, terms):
-        """Поиск по точному совпадению."""
+    def convert_utc_to_local(self, utc_dt):
+        """Преобразуем UTC время в локальное время."""
+        local_tz = pytz.timezone('Europe/Moscow')
+        utc_dt = utc_dt.replace(tzinfo=pytz.utc)
+        return utc_dt.astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+    def search_like(self, terms):
+        """Поиск в базе данных."""
+        terms = f'%{terms.lower()}%'
+        results = []
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                query = ' AND '.join(['ocr_result LIKE ?' for _ in terms])
-                like_terms = [f"%{term}%" for term in terms]
-
-                cursor.execute(f'''
+                cursor.execute('''
                     SELECT image_path, ocr_result, timestamp
-                    FROM ocr_results_fts
-                    WHERE {query}
-                ''', like_terms)
-
+                    FROM ocr_results
+                    WHERE ocr_result LIKE ?
+                ''', (terms,))
                 results = cursor.fetchall()
-                logging.info("Search results for terms %s:",
-                             terms)
-
-                for result in results:
-                    # Логируем путь к изображению и первые 10 символов результата
-                    logging.info("Search result - Image Path: %s, OCR Result (first 10 chars): %s",
-                                 result[0], result[1][:10])
-
-                return results
-
+                logging.info("Search results for terms %s:", terms)
+            return results
         except Exception as e:
             logging.exception("Failed to search database: %s", e)
             return []
