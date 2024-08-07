@@ -1,7 +1,6 @@
 import logging
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QPushButton
-from workers.image_loader import ImageLoader
 from logger import setup_logging
 
 setup_logging()
@@ -13,7 +12,7 @@ class MainView(QtWidgets.QMainWindow):
         uic.loadUi('views/ui/mainwindow.ui', self)
         self.image_paths = []
         self.current_page = 1
-        self.images_per_page = 10
+        self.images_per_page = 12
         self.total_pages = 1
 
         self.image_grid_layout = self.findChild(
@@ -24,10 +23,6 @@ class MainView(QtWidgets.QMainWindow):
         self.prev_button = self.findChild(QPushButton, 'pushButton')
         self.next_button = self.findChild(QPushButton, 'pushButton_2')
         self.page_info_label = self.findChild(QLabel, 'label')
-
-        # Connect pagination buttons
-        self.prev_button.clicked.connect(self.prev_page)
-        self.next_button.clicked.connect(self.next_page)
 
         # Add a timer to delay textChanged event handling
         self.search_timer = QtCore.QTimer()
@@ -55,24 +50,23 @@ class MainView(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.resize_timer.start(100)  # Delay resize handling by 100 ms
+        self.resize_timer.start(100)
 
     def on_text_changed(self):
-        self.search_timer.start(300)  # Delay search handling by 300 ms
+        self.search_timer.start(300)
 
-    def display_images(self, results):
-        self.clear_layout(self.image_grid_layout)  # Clear existing images
-        self.image_paths = [(result[0], result[2])
-                            for result in results]  # Store path and caption
+    def refresh_images(self, results):
+        self.clear_image_grid()
+        self.set_page_info(results)
 
+    def clear_image_grid(self):
+        self.clear_layout(self.image_grid_layout)
+
+    def set_page_info(self, results):
+        self.image_paths = [(result[0], result[2]) for result in results]
         self.total_pages = (len(self.image_paths) +
                             self.images_per_page - 1) // self.images_per_page
         self.current_page = 1
-
-        # Asynchronously load images
-        self.image_loader = ImageLoader([path for path, _ in self.image_paths])
-        self.image_loader.image_loaded.connect(self.on_image_loaded)
-        self.image_loader.start()
 
     def on_image_loaded(self, image_path, pixmap):
         if pixmap.isNull():
