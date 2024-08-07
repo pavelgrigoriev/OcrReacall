@@ -1,23 +1,10 @@
 import logging
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QPushButton
+from workers.image_loader import ImageLoader
 from logger import setup_logging
 
 setup_logging()
-
-
-class ImageLoader(QtCore.QObject):
-    image_loaded = QtCore.pyqtSignal(str, QPixmap)
-
-    def __init__(self, image_paths):
-        super().__init__()
-        self.image_paths = image_paths
-
-    def load_images(self):
-        for image_path in self.image_paths:
-            pixmap = QPixmap(image_path)
-            self.image_loaded.emit(image_path, pixmap)
 
 
 class MainView(QtWidgets.QMainWindow):
@@ -25,8 +12,22 @@ class MainView(QtWidgets.QMainWindow):
         super(MainView, self).__init__()
         uic.loadUi('views/ui/mainwindow.ui', self)
         self.image_paths = []
+        self.current_page = 1
+        self.images_per_page = 10
+        self.total_pages = 1
+
         self.image_grid_layout = self.findChild(
             QtWidgets.QGridLayout, 'gridLayout_3')
+        self.scroll_area = self.findChild(QtWidgets.QScrollArea, 'scrollArea')
+
+        # Pagination widgets
+        self.prev_button = self.findChild(QPushButton, 'pushButton')
+        self.next_button = self.findChild(QPushButton, 'pushButton_2')
+        self.page_info_label = self.findChild(QLabel, 'label')
+
+        # Connect pagination buttons
+        self.prev_button.clicked.connect(self.prev_page)
+        self.next_button.clicked.connect(self.next_page)
 
         # Add a timer to delay textChanged event handling
         self.search_timer = QtCore.QTimer()
@@ -41,12 +42,12 @@ class MainView(QtWidgets.QMainWindow):
         # Image cache to store scaled pixmaps
         self.image_cache = {}
 
-        self.load_stylesheet()
+        # self.load_stylesheet()
 
-    def load_stylesheet(self):
-        # Load the stylesheet from an external file
-        with open("views/styles/styles.css", "r") as file:
-            self.setStyleSheet(file.read())
+    # def load_stylesheet(self):
+    #     # Load the stylesheet from an external file
+    #     with open("views/styles/styles.css", "r") as file:
+    #         self.setStyleSheet(file.read())
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         logging.info("Application is closing")
@@ -54,7 +55,7 @@ class MainView(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.resize_timer.start(200)  # Delay resize handling by 200 ms
+        self.resize_timer.start(100)  # Delay resize handling by 100 ms
 
     def on_text_changed(self):
         self.search_timer.start(300)  # Delay search handling by 300 ms
@@ -64,13 +65,14 @@ class MainView(QtWidgets.QMainWindow):
         self.image_paths = [(result[0], result[2])
                             for result in results]  # Store path and caption
 
+        self.total_pages = (len(self.image_paths) +
+                            self.images_per_page - 1) // self.images_per_page
+        self.current_page = 1
+
         # Asynchronously load images
-        self.thread = QtCore.QThread()
         self.image_loader = ImageLoader([path for path, _ in self.image_paths])
-        self.image_loader.moveToThread(self.thread)
         self.image_loader.image_loaded.connect(self.on_image_loaded)
-        self.thread.started.connect(self.image_loader.load_images)
-        self.thread.start()
+        self.image_loader.start()
 
     def on_image_loaded(self, image_path, pixmap):
         if pixmap.isNull():
@@ -88,13 +90,17 @@ class MainView(QtWidgets.QMainWindow):
 
     def update_display_images(self):
         self.clear_layout(self.image_grid_layout)
-        scroll_area_size = self.scrollArea.size()
+        scroll_area_size = self.scroll_area.size()
         min_image_size = 500
         max_columns = max(1, scroll_area_size.width() // (min_image_size + 10))
 
+        start_index = (self.current_page - 1) * self.images_per_page
+        end_index = min(start_index + self.images_per_page,
+                        len(self.image_paths))
+
         row = 0
         col = 0
-        for image_path, caption in self.image_paths:
+        for image_path, caption in self.image_paths[start_index:end_index]:
             if image_path in self.image_cache:
                 pixmap = self.image_cache[image_path]
                 image_size = min(scroll_area_size.width() //
@@ -109,7 +115,8 @@ class MainView(QtWidgets.QMainWindow):
                 # Create and set image label
                 image_label = QLabel()
                 scaled_pixmap = pixmap.scaled(
-                    image_size, image_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+                    image_size, image_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation
+                )
                 image_label.setPixmap(scaled_pixmap)
 
                 # Create and set caption label
@@ -128,3 +135,21 @@ class MainView(QtWidgets.QMainWindow):
                 if col >= max_columns:
                     col = 0
                     row += 1
+
+        self.update_page_info()
+
+    def update_page_info(self):
+        self.page_info_label.setText(
+            f"Страница {self.current_page} из {self.total_pages}")
+        self.prev_button.setEnabled(self.current_page > 1)
+        self.next_button.setEnabled(self.current_page < self.total_pages)
+
+    def prev_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+            self.update_display_images()
+
+    def next_page(self):
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+            self.update_display_images()
