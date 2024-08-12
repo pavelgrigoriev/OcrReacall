@@ -1,14 +1,15 @@
 import logging
+import os
 import sys
 from datetime import datetime
 from config.config_manager import ConfigManager
 
 
 def setup_logging():
-    # Получаем текущую дату и время
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    # Формируем имя файла с временной меткой
-    log_filename = f"{ConfigManager().get_app_dir()}/app_{timestamp}.log"
+    os.makedirs(ConfigManager().get_app_dir() + "/logs", exist_ok=True)
+    log_filename = f"{ConfigManager().get_app_dir()
+                      }/logs/app_{timestamp}.log"
 
     # Проверяем, есть ли уже обработчики
     if not logging.getLogger().hasHandlers():
