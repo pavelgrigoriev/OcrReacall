@@ -1,9 +1,50 @@
 import logging
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QPushButton
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QPushButton, QDialog
 from logger import setup_logging
+from PyQt6.QtCore import Qt
 
 setup_logging()
+
+
+class FullscreenImageDialog(QDialog):
+    def __init__(self, pixmap):
+        super().__init__()
+        self.setWindowTitle("Image Viewer")
+        self.setWindowFlags(self.windowFlags() |
+                            Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        self.image_label = QLabel()
+        layout.addWidget(self.image_label)
+
+        self.set_image(pixmap)
+
+    def set_image(self, pixmap):
+        screen_geometry = QtGui.QGuiApplication.primaryScreen().geometry()
+        screen_width = screen_geometry.width()
+        screen_height = screen_geometry.height()
+
+        scaled_pixmap = pixmap.scaled(
+            screen_width, screen_height,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+
+        self.image_label.setPixmap(scaled_pixmap)
+        self.resize(scaled_pixmap.size())
+        self.move(
+            (screen_width - self.width()) // 2,
+            (screen_height - self.height()) // 2
+        )
+
+    def resizeEvent(self, event):
+        if self.image_label.pixmap():
+            self.set_image(self.image_label.pixmap())
 
 
 class MainView(QtWidgets.QMainWindow):
@@ -82,6 +123,10 @@ class MainView(QtWidgets.QMainWindow):
             if child.widget():
                 child.widget().deleteLater()
 
+    def on_image_clicked(self, pixmap):
+        dialog = FullscreenImageDialog(pixmap)
+        dialog.exec()
+
     def update_display_images(self):
         self.clear_layout(self.image_grid_layout)
         scroll_area_size = self.scroll_area.size()
@@ -112,10 +157,12 @@ class MainView(QtWidgets.QMainWindow):
                     image_size, image_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation
                 )
                 image_label.setPixmap(scaled_pixmap)
+                image_label.mousePressEvent = lambda event, p=pixmap: self.on_image_clicked(
+                    p)
 
                 # Create and set caption label
                 caption_label = QLabel(caption)
-                caption_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                caption_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 caption_label.setObjectName("caption")
 
                 # Add image and caption to the container layout
