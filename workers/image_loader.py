@@ -13,7 +13,7 @@ class ImageLoader(QtCore.QThread):
         for image_path in self.image_paths:
             pixmap = QPixmap(image_path)
             thumbnail_pixmap = pixmap.scaled(
-                499, 400, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                400, 400, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                 QtCore.Qt.TransformationMode.SmoothTransformation
             )
             self.image_loaded.emit(image_path, thumbnail_pixmap)
