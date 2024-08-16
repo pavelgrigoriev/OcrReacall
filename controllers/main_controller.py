@@ -32,18 +32,29 @@ class MainController(QObject):
         if self.image_loader is not None:
             self.image_loader.quit()
             self.image_loader.wait()
-        self.image_loader = ImageLoader(image_paths)
+
+        # Список путей изображений только для текущей страницы
+        start_index = (self.view.current_page - 1) * self.view.images_per_page
+        end_index = min(
+            start_index + self.view.images_per_page, len(image_paths))
+        page_image_paths = image_paths[start_index:end_index]
+
+        self.image_loader = ImageLoader(page_image_paths)
         self.image_loader.image_loaded.connect(self.view.on_image_loaded)
         self.image_loader.start()
 
     def prev_page(self):
         if self.view.current_page > 1:
             self.view.current_page -= 1
+            # Загрузка изображений для новой страницы
+            self.load_images([result[0] for result in self.view.image_paths])
             self.view.update_display_images()
 
     def next_page(self):
         if self.view.current_page < self.view.total_pages:
             self.view.current_page += 1
+            # Загрузка изображений для новой страницы
+            self.load_images([result[0] for result in self.view.image_paths])
             self.view.update_display_images()
 
     def run(self):

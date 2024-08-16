@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QPixmap
 import logging
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QPushButton, QDialog
@@ -23,6 +24,9 @@ class FullscreenImageDialog(QDialog):
         layout.addWidget(self.image_label)
 
         self.set_image(pixmap)
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        self.accept()  # Закрывает диалог при нажатии на изображение
 
     def set_image(self, pixmap):
         screen_geometry = QtGui.QGuiApplication.primaryScreen().geometry()
@@ -89,6 +93,18 @@ class MainView(QtWidgets.QMainWindow):
         logging.info("Application is closing")
         event.accept()
 
+    def open_fullscreen_image(self, image_path):
+        # Получаем оригинальный pixmap из кэша
+        pixmap = QPixmap(image_path)
+        if pixmap.isNull():
+            logging.error(
+                f"Image not found and could not load from path: {image_path}")
+            return
+
+        # Открываем изображение в полноэкранном диалоге
+        dialog = FullscreenImageDialog(pixmap)
+        dialog.exec()
+
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
         self.resize_timer.start(100)
@@ -140,42 +156,44 @@ class MainView(QtWidgets.QMainWindow):
         row = 0
         col = 0
         for image_path, caption in self.image_paths[start_index:end_index]:
-            if image_path in self.image_cache:
-                pixmap = self.image_cache[image_path]
-                image_size = min(scroll_area_size.width() //
-                                 max_columns - 10, min_image_size)
+            # Пытаемся получить из кэша
+            pixmap = self.image_cache.get(image_path, QPixmap())
 
-                # Create container widget
-                container = QWidget()
-                container_layout = QVBoxLayout()
-                container.setLayout(container_layout)
-                container.setObjectName("container")
+            image_size = min(scroll_area_size.width() //
+                             max_columns - 10, min_image_size)
 
-                # Create and set image label
-                image_label = QLabel()
-                scaled_pixmap = pixmap.scaled(
-                    image_size, image_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation
-                )
-                image_label.setPixmap(scaled_pixmap)
-                image_label.mousePressEvent = lambda event, p=pixmap: self.on_image_clicked(
-                    p)
+            # Создаем контейнер для изображения
+            container = QWidget()
+            container_layout = QVBoxLayout()
+            container.setLayout(container_layout)
+            container.setObjectName("container")
 
-                # Create and set caption label
-                caption_label = QLabel(caption)
-                caption_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                caption_label.setObjectName("caption")
+            # Создаем и устанавливаем QLabel для изображения
+            image_label = QLabel()
+            scaled_pixmap = pixmap.scaled(
+                image_size, image_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+            image_label.setPixmap(scaled_pixmap)
 
-                # Add image and caption to the container layout
-                container_layout.addWidget(image_label)
-                container_layout.addWidget(caption_label)
+            # Устанавливаем обработчик клика
+            image_label.mousePressEvent = lambda event, p=image_path: self.open_fullscreen_image(
+                p)
 
-                # Add container to the grid layout
-                self.image_grid_layout.addWidget(container, row, col)
+            # Создаем и устанавливаем QLabel для подписи
+            caption_label = QLabel(caption)
+            caption_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            caption_label.setObjectName("caption")
 
-                col += 1
-                if col >= max_columns:
-                    col = 0
-                    row += 1
+            # Добавляем изображение и подпись в контейнер
+            container_layout.addWidget(image_label)
+            container_layout.addWidget(caption_label)
+
+            # Добавляем контейнер в сетку
+            self.image_grid_layout.addWidget(container, row, col)
+
+            col += 1
+            if col >= max_columns:
+                col = 0
+                row += 1
 
         self.update_page_info()
 
