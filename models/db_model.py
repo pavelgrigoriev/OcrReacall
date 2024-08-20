@@ -52,6 +52,7 @@ class DbModel():
         return utc_dt.astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
 
     def search_like(self, terms):
+        terms = terms.rstrip()
         if not terms.strip():  # Проверяем, является ли строка пустой или содержит только пробелы
             return []
 
